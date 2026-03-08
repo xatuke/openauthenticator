@@ -10,6 +10,9 @@ targets:
     platform: macOS
     sources:
       - path: Sources/OpenAuthenticator
+        excludes:
+          - "Assets.xcassets"
+      - path: Sources/OpenAuthenticator/Assets.xcassets
     entitlements:
       path: OpenAuthenticator.entitlements
       properties:
