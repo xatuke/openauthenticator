@@ -21,6 +21,13 @@ struct ContentView: View {
             }
         }
         .frame(width: 320)
+        .onChange(of: auth.isUnlocked) {
+            if auth.isUnlocked {
+                store.load(context: auth.authenticatedContext)
+            } else {
+                store.purge()
+            }
+        }
     }
 
     var lockedBody: some View {
@@ -52,13 +59,6 @@ struct ContentView: View {
         }
         .padding(32)
         .onAppear { auth.authenticate() }
-        .onChange(of: auth.isUnlocked) {
-            if auth.isUnlocked {
-                store.load(context: auth.authenticatedContext)
-            } else {
-                store.purge()
-            }
-        }
     }
 
     var unlockedBody: some View {

@@ -5,7 +5,6 @@ class AuthState: ObservableObject {
     @Published var isUnlocked = false
     @Published var authError: String?
 
-    /// The authenticated LAContext, passed to Keychain so it doesn't re-prompt
     private(set) var authenticatedContext: LAContext?
 
     /// How long the app stays unlocked after authentication (seconds)

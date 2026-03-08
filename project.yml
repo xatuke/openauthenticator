@@ -1,0 +1,33 @@
+name: OpenAuthenticator
+options:
+  bundleIdPrefix: com.openauthenticator
+  deploymentTarget:
+    macOS: "14.0"
+
+targets:
+  OpenAuthenticator:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/OpenAuthenticator
+    entitlements:
+      path: OpenAuthenticator.entitlements
+    info:
+      path: Info.plist
+      properties:
+        CFBundleName: OpenAuthenticator
+        CFBundleDisplayName: OpenAuthenticator
+        CFBundleIdentifier: com.openauthenticator.app
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "1.0"
+        CFBundlePackageType: APPL
+        CFBundleExecutable: OpenAuthenticator
+        LSMinimumSystemVersion: "14.0"
+        LSUIElement: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.openauthenticator.app
+        DEVELOPMENT_TEAM: CRH6P5D9K2
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"

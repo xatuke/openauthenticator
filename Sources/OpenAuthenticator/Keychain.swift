@@ -5,7 +5,6 @@ import LocalAuthentication
 enum Keychain {
     private static let service = "com.openauthenticator.accounts"
 
-    /// Create an access control requiring biometric or device passcode
     private static func makeAccessControl() -> SecAccessControl? {
         SecAccessControlCreateWithFlags(
             nil,
@@ -18,7 +17,6 @@ enum Keychain {
     static func save(accounts: [Account], context: LAContext? = nil) throws {
         let data = try JSONEncoder().encode(accounts)
 
-        // Delete existing item first (pass context so ACL-protected items can be deleted)
         var deleteQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -36,11 +34,14 @@ enum Keychain {
             kSecValueData as String: data,
         ]
 
-        // Use biometric-protected ACL if available, else fall back to basic protection
         if let acl = makeAccessControl() {
             addQuery[kSecAttrAccessControl as String] = acl
         } else {
             addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        }
+
+        if let context = context {
+            addQuery[kSecUseAuthenticationContext as String] = context
         }
 
         let status = SecItemAdd(addQuery as CFDictionary, nil)
@@ -58,7 +59,6 @@ enum Keychain {
             kSecMatchLimit as String: kSecMatchLimitOne,
         ]
 
-        // Pass authenticated LAContext so Keychain doesn't re-prompt
         if let context = context {
             query[kSecUseAuthenticationContext as String] = context
         }

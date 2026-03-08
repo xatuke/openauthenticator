@@ -4,7 +4,6 @@ import LocalAuthentication
 class AccountStore: ObservableObject {
     @Published var accounts: [Account] = []
 
-    /// The authenticated context, passed to Keychain for ACL-protected operations
     var authContext: LAContext?
 
     private var legacyURL: URL {
@@ -21,7 +20,6 @@ class AccountStore: ObservableObject {
 
     /// Wipe secrets from memory when locking
     func purge() {
-        // Overwrite secret bytes before releasing
         for i in accounts.indices {
             let count = accounts[i].secret.count
             accounts[i].secret = Data(repeating: 0, count: count)
