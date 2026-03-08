@@ -1,0 +1,33 @@
+# Swift build artifacts
+.build/
+*.xcodeproj
+xcuserdata/
+DerivedData/
+
+# Swift Package Manager
+Package.resolved
+.swiftpm/
+
+# Claude Code
+.claude/
+
+# OS files
+.DS_Store
+*.swp
+*~
+
+# QR code images (may contain secrets)
+*.jpeg
+*.jpg
+*.png
+*.gif
+*.bmp
+
+# Python artifacts
+*.py
+*.pyc
+__pycache__/
+
+# Debug images
+qr_cropped.*
+qr_thresh.*
