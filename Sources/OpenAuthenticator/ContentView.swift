@@ -11,6 +11,8 @@ struct ContentView: View {
     @State private var showImportResult = false
     @State private var importResultMessage = ""
     @State private var isDragging = false
+    @State private var showURIInput = false
+    @State private var uriText = ""
 
     var body: some View {
         Group {
@@ -85,6 +87,9 @@ struct ContentView: View {
     var mainContent: some View {
         VStack(spacing: 0) {
             header
+            if showURIInput {
+                uriInputPanel
+            }
             Divider()
             if store.accounts.isEmpty {
                 emptyState
@@ -95,6 +100,49 @@ struct ContentView: View {
             footer
         }
         .frame(width: 320)
+    }
+
+    var uriInputPanel: some View {
+        VStack(spacing: 6) {
+            Text("Paste an otpauth:// URI")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            TextField("otpauth://totp/...", text: $uriText)
+                .textFieldStyle(.roundedBorder)
+                .font(.system(.caption, design: .monospaced))
+            HStack {
+                Button("Cancel") {
+                    uriText = ""
+                    withAnimation { showURIInput = false }
+                }
+                .buttonStyle(.borderless)
+                .font(.caption)
+                Spacer()
+                Button("Add") {
+                    let accounts = Importer.importFromURI(uriText)
+                    if accounts.isEmpty {
+                        errorMessage = "No valid otpauth:// URI found."
+                        showError = true
+                    } else {
+                        let added = store.addAccounts(accounts)
+                        importResultMessage = "Added \(added) account(s)."
+                        if added < accounts.count {
+                            importResultMessage += " \(accounts.count - added) duplicate(s) skipped."
+                        }
+                        showImportResult = true
+                    }
+                    uriText = ""
+                    withAnimation { showURIInput = false }
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .font(.caption)
+                .disabled(uriText.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(.quaternary.opacity(0.3))
     }
 
     @ViewBuilder
@@ -117,16 +165,22 @@ struct ContentView: View {
     }
 
     var header: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Text("OpenAuthenticator")
                 .font(.headline)
             Spacer()
-            Button(action: importQR) {
-                Image(systemName: "qrcode.viewfinder")
-                    .font(.system(size: 14))
+            Button(action: { showURIInput.toggle() }) {
+                Image(systemName: "link.badge.plus")
+                    .font(.system(size: 13))
             }
             .buttonStyle(.borderless)
-            .help("Import QR Codes")
+            .help("Add from URI")
+            Button(action: importFiles) {
+                Image(systemName: "square.and.arrow.down")
+                    .font(.system(size: 13))
+            }
+            .buttonStyle(.borderless)
+            .help("Import (QR images, CSV, 1PUX)")
             Button(action: { auth.lock() }) {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 12))
@@ -146,11 +200,11 @@ struct ContentView: View {
             Text("No accounts yet")
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.secondary)
-            Text("Import Google Authenticator export\nQR code images, or drag & drop them here")
+            Text("Import from QR images, 1Password\nexport (CSV/1PUX), or paste a URI")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
-            Button("Import QR Codes") { importQR() }
+            Button("Import") { importFiles() }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
         }
@@ -251,11 +305,16 @@ struct ContentView: View {
         }
     }
 
-    func importQR() {
+    func importFiles() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [UTType.image]
+        panel.allowedContentTypes = [
+            UTType.image,
+            UTType.commaSeparatedText,
+            UTType.zip,
+            UTType(filenameExtension: "1pux") ?? UTType.data,
+        ]
         panel.allowsMultipleSelection = true
-        panel.message = "Select all Google Authenticator export QR code images"
+        panel.message = "Select QR code images, 1Password CSV, or 1PUX export"
         panel.prompt = "Import"
 
         guard panel.runModal() == .OK else { return }
@@ -299,7 +358,7 @@ struct ContentView: View {
 
         for url in urls {
             do {
-                let accounts = try QRImporter.importAccounts(from: url)
+                let accounts = try Importer.importAccounts(from: url)
                 if accounts.isEmpty {
                     failedImages.append(url.lastPathComponent)
                 } else {
@@ -313,17 +372,17 @@ struct ContentView: View {
 
         if newAccounts.isEmpty {
             errorMessage = failedImages.isEmpty
-                ? "No authenticator accounts found in the selected image(s)."
+                ? "No authenticator accounts found in the selected file(s)."
                 : "Failed to import:\n" + failedImages.joined(separator: "\n")
             showError = true
         } else {
             let added = store.addAccounts(newAccounts)
-            var msg = "Found \(newAccounts.count) account(s) from \(successCount) image(s)."
+            var msg = "Found \(newAccounts.count) account(s) from \(successCount) file(s)."
             if added < newAccounts.count {
                 msg += "\n\(newAccounts.count - added) duplicate(s) skipped."
             }
             if !failedImages.isEmpty {
-                msg += "\n\(failedImages.count) image(s) had no QR codes."
+                msg += "\n\(failedImages.count) file(s) had no QR codes."
             }
             importResultMessage = msg
             showImportResult = true

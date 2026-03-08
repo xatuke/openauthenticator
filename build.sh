@@ -1,6 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
+# Regenerate Xcode project from project.yml
+xcodegen generate
+
+# Build
 xcodebuild -project OpenAuthenticator.xcodeproj \
   -scheme OpenAuthenticator \
   -configuration "${1:-Debug}" \
