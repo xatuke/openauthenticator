@@ -17,6 +17,11 @@ BUILT_DIR=$(xcodebuild -project OpenAuthenticator.xcodeproj \
   -showBuildSettings 2>/dev/null | grep -m1 'BUILT_PRODUCTS_DIR' | awk '{print $3}')
 APP="$BUILT_DIR/OpenAuthenticator.app"
 
+# Remove the Xcode-embedded Development provisioning profile. It is
+# device-locked to registered Macs; leaving it in makes the app refuse to
+# launch ("can't be opened") on every other machine, even once notarized.
+rm -f "$APP/Contents/embedded.provisionprofile"
+
 # Re-sign with Developer ID + hardened runtime for public distribution.
 # Resolved entitlements (AppIdentifierPrefix = TeamID for Developer ID).
 ENT="$(mktemp -d)/entitlements.plist"
