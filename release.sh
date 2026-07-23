@@ -53,10 +53,27 @@ xcrun stapler staple "$APP"
 # Verify Gatekeeper accepts it
 spctl -a -vvv -t exec "$APP"
 
-# Zip the stapled app for distribution
-ditto -c -k --keepParent "$APP" /tmp/OpenAuthenticator.zip
+# Package as a DMG with an /Applications shortcut. Shipping a bare .zip made
+# users launch the app straight from ~/Downloads, where macOS App
+# Translocation runs it from a random read-only path and it fails to open.
+# A DMG guides users to drag the app into /Applications, which avoids
+# translocation entirely, so it launches cleanly on first double-click.
+STAGE="$(mktemp -d)/dmg"
+mkdir -p "$STAGE"
+cp -R "$APP" "$STAGE/"
+ln -s /Applications "$STAGE/Applications"
+DMG=/tmp/OpenAuthenticator.dmg
+rm -f "$DMG"
+hdiutil create -volname "OpenAuthenticator" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
 
-# Create GitHub release
-gh release create "v$VERSION" /tmp/OpenAuthenticator.zip \
+# Sign, notarize, and staple the DMG itself.
+codesign --force --sign "$DEV_ID" --timestamp "$DMG"
+echo "Notarizing DMG..."
+xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
+xcrun stapler staple "$DMG"
+spctl -a -vvv -t open --context context:primary-signature "$DMG"
+
+# Create GitHub release with the DMG
+gh release create "v$VERSION" "$DMG" \
   --title "OpenAuthenticator v$VERSION" \
   --notes "$NOTES"
