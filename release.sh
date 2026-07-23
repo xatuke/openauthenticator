@@ -19,8 +19,7 @@ APP="$BUILT_DIR/OpenAuthenticator.app"
 
 # Re-sign with Developer ID + hardened runtime for public distribution.
 # Resolved entitlements (AppIdentifierPrefix = TeamID for Developer ID).
-ENT=$(mktemp)/entitlements.plist
-mkdir -p "$(dirname "$ENT")"
+ENT="$(mktemp -d)/entitlements.plist"
 cat > "$ENT" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
