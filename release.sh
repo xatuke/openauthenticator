@@ -23,20 +23,10 @@ APP="$BUILT_DIR/OpenAuthenticator.app"
 rm -f "$APP/Contents/embedded.provisionprofile"
 
 # Re-sign with Developer ID + hardened runtime for public distribution.
-# Resolved entitlements (AppIdentifierPrefix = TeamID for Developer ID).
-ENT="$(mktemp -d)/entitlements.plist"
-cat > "$ENT" <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>keychain-access-groups</key>
-	<array>
-		<string>${TEAM_ID}.com.openauthenticator.app</string>
-	</array>
-</dict>
-</plist>
-EOF
+# No entitlements: the app is non-sandboxed and uses the default keychain
+# access group, so keychain-access-groups is unnecessary. Shipping it
+# WITHOUT a provisioning profile to authorize it makes AMFI SIGKILL the app
+# on launch ("can't be opened") on every machine.
 
 # Sign nested code (frameworks/dylibs) first, then the app bundle.
 find "$APP/Contents/Frameworks" -type f \( -name "*.dylib" -o -name "*.framework" \) 2>/dev/null \
@@ -45,7 +35,6 @@ find "$APP/Contents/Frameworks" -maxdepth 1 -type d -name "*.framework" 2>/dev/n
   -exec codesign --force --options runtime --timestamp --sign "$DEV_ID" {} \; || true
 
 codesign --force --options runtime --timestamp \
-  --entitlements "$ENT" \
   --sign "$DEV_ID" "$APP"
 
 codesign --verify --deep --strict --verbose=2 "$APP"

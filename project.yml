@@ -15,9 +15,7 @@ targets:
       - path: Sources/OpenAuthenticator/Assets.xcassets
     entitlements:
       path: OpenAuthenticator.entitlements
-      properties:
-        keychain-access-groups:
-          - $(AppIdentifierPrefix)com.openauthenticator.app
+      properties: {}
     info:
       path: Info.plist
       properties:
