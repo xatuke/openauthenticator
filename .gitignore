@@ -23,6 +23,9 @@ Package.resolved
 *.gif
 *.bmp
 
+# ...but the app icon assets must be tracked
+!Sources/OpenAuthenticator/Assets.xcassets/**/*.png
+
 # Python artifacts
 *.py
 *.pyc
